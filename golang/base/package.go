@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/Meta39/gohello"
 	"golang/base/demo"
 )
 
@@ -125,6 +126,97 @@ func Package() {
 		这样在拉取以git.mycompany.com为路径前缀的依赖包时就能正常拉取了。
 		此外，如果公司内部自建了 GOPROXY 服务，那么我们可以通过设置 GONOPROXY=none，允许通内部代理拉取私有仓库的包。
 	*/
+
+	/*
+		在go-demo文件夹下面创建overtime文件夹并在文件夹下进行初始化。
+		即：
+		1、cd ./overtime
+		2、go mod init overtime
+		3、创建overtime.go文件
+		4、创建一个公共函数Hello，可以在全局访问。以供当前项目调用
+		func Hello() {
+			fmt.Println("Hello Meta39")
+		}
+	*/
+
+	/*
+		使用go module发布包
+		1、编写一个代码包并将它发布到github.com仓库，让它能够被全球的Go语言开发者使用。
+		2、在自己的 github 账号下新建一个 gohello 只包含 README.md 的项目，并把它下载到本地。git clone https://github.com/Meta39/gohello
+		3、初始化项目。cd gohello => go mod init github.com/Meta39/gohello
+		4、创建一个 hello.go 文件并创建 GoHello 函数，输出 GoHello。代码如下：
+		package gohello
+
+		import "fmt"
+
+		func GoHello() {
+			fmt.Println("GoHello")
+		}
+		5、然后将该项目的代码 push 到仓库的远端分支，这样就对外发布了一个Go包。其他的开发者可以通过 github.com/Meta39/gohello 这个引入路径下载并使用这个包了。
+			git config user.name Meta39
+			git config user.email 5399553@qq.com
+			git add .
+			git commit -m "描述"
+			git remote add [远程仓库分支别名] [远程SSH或者Https]
+			git push [远程仓库分支别名] [远程仓库分支名]
+			//推送github.com/Meta39/gohello中的hello.go和GoHello函数以后再发布版本
+			git tag -a v0.1.0 -m "release version v0.1.0"
+			git push [远程仓库分支别名] v0.1.0
+			//然后就会在自己的github仓库Releases中有发布一个名为v0.1.0的Tag，供当前项目使用
+		6、一个设计完善的包应该包含开源许可证及文档等内容，并且我们还应该尽心维护并适时发布适当的版本。github 上发布版本号使用git tag为代码包打上标签即可。
+		7、Go modules中建议使用语义化版本控制，其建议的版本号格式如下：v主版本号.次版本号.修订号
+			主版本号：发布了不兼容的版本迭代时递增（breaking changes）。
+			次版本号：发布了功能性更新时递增。
+			修订号：发布了bug修复类更新时递增。
+		8、go.mod 配置 require github.com/Meta39/gohello v0.1.0
+		9、在当前项目的根路径下(golang)输入：go mod download下载gohello项目
+		10、导入 import github.com/Meta39/gohello 包
+		11、调用GoHello函数
+	*/
+	fmt.Println("调用自己开源的包github.com/Meta39/gohello.GoHello函数输出GoHello")
+	gohello.GoHello()
+
+	/*
+		发布新的主版本
+		1、现在我们的 gohello 项目要进行与之前版本不兼容的更新，我们计划让 SayHi 函数支持向指定人发出问候。更新后的 SayHi 函数内容如下：
+		package gohello
+
+		import "fmt"
+
+		// SayHi 向指定人打招呼的函数
+		func SayHi(name string) {
+			fmt.Printf("你好%s，我是Meta39。很高兴认识你。\n", name)
+		}
+
+		2、由于这次改动巨大（修改了函数之前的调用规则），对之前使用该包作为依赖的用户影响巨大。
+		因此我们需要发布一个主版本号递增的v2版本。在这种情况下，我们通常会修改当前包的引入路径，像下面的示例一样为引入路径添加版本后缀。
+
+		// gohello/go.mod修改如下
+		//v0.1.0
+		//module github.com/Meta39/gohello
+
+		//v2.0.0
+		module github.com/Meta39/gohello/v2
+
+		命令行操作把修改后的代码提交：
+			git add .
+			git commit -m "feat: SayHi现在支持给指定人打招呼啦"
+			git push
+		打好 tag 推送到远程仓库。
+			git tag -a v2.0.0 -m "release version v2.0.0"
+			git push [远程仓库分支别名] v2.0.0
+
+		3、这样在不影响使用旧版本的用户的前提下，我们新的版本也发布出去了。想要使用v2版本的代码包的用户只需按修改后的引入路径下载即可。
+			当前项目根目录（golang）命令行输入
+			go get github.com/Meta39/gohello/v2@v2.0.0
+
+		4、在代码中使用的过程与之前类似，只是需要注意引入路径要添加 v2 版本后缀。
+
+			import "github.com/Meta39/gohello/v2" // 引入v2版本
+
+			gohello.SayHi("张三") // v2版本的SayHi函数需要传入字符串参数
+	*/
+	//gohello.SayHi("张三")
 
 	fmt.Println("============ 包 ============")
 }
