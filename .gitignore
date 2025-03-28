@@ -1,0 +1,7 @@
+### GoLand ###
+.idea
+*.log
+*.exe
+
+### VS Code ###
+.vscode/
