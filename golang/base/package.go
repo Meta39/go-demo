@@ -1,8 +1,13 @@
 package main
 
+/*
+执行go get github.com/Meta39/gohello/v2@v2.0.0命令时要注意 go.sum 是否一致，如果始终无法导入，则删除里面的内容。
+"github.com/Meta39/gohello" 和 "github.com/Meta39/gohello/v2"是同一个项目不通版本，go不知道用哪个版本，因此要用gohello2别名区分
+*/
 import (
 	"fmt"
 	"github.com/Meta39/gohello"
+	gohello2 "github.com/Meta39/gohello/v2"
 	"golang/base/demo"
 )
 
@@ -172,6 +177,9 @@ func Package() {
 		9、在当前项目的根路径下(golang)输入：go mod download下载gohello项目
 		10、导入 import github.com/Meta39/gohello 包
 		11、调用GoHello函数
+		PS：如果gohello打错包，比如没有修改v2直接打包。但是命名时v2.0.0
+		此时go get github.com/Meta39/gohello/v2@v2.0.0会找不到包，修改gohello go.mod文件后要删除原来的tag，重新打tag。
+		golang 再次执行go get github.com/Meta39/gohello/v2@v2.0.0前需要删除go.sum里面有关v2的包，否则会拉取失败。
 	*/
 	fmt.Println("调用自己开源的包github.com/Meta39/gohello.GoHello函数输出GoHello")
 	gohello.GoHello()
@@ -216,7 +224,7 @@ func Package() {
 
 			gohello.SayHi("张三") // v2版本的SayHi函数需要传入字符串参数
 	*/
-	//gohello.SayHi("张三")
+	gohello2.SayHi("张三")
 
 	fmt.Println("============ 包 ============")
 }
