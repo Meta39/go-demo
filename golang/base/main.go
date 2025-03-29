@@ -32,4 +32,6 @@ func main() {
 	Package()
 	//14、接口
 	Interface()
+	//15、错误
+	Error()
 }
