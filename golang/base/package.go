@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"github.com/Meta39/gohello"
 	gohello2 "github.com/Meta39/gohello/v2"
+	"github.com/Meta39/overtime"
 	"golang/base/demo"
 )
 
@@ -134,6 +135,11 @@ func Package() {
 	*/
 
 	/*
+		使用go module引入本地的一个包
+		如果你想要导入本地的一个包，并且这个包也没有发布到到其他任何代码仓库，这时候你可以在go.mod文件中使用replace语句将依赖临时替换为本地的代码包。
+		例如在我的电脑上有另外一个名为 github.com/Meta39/overtime 的项目，它位于 golang 项目同级目录下。
+		由于 github.com/Meta39/overtime 包只存在于我本地，并不能通过网络获取到这个代码包，这个时候应该如何在 golang 项目中引入它呢？
+		我们可以在 golang/go.mod 文件中正常引入 github.com/Meta39/overtime 包，然后像下面的示例那样使用 replace 语句将这个依赖替换为使用相对路径表示的本地包。
 		在go-demo文件夹下面创建overtime文件夹并在文件夹下进行初始化。
 		即：
 		1、cd ./overtime
@@ -143,7 +149,14 @@ func Package() {
 		func Hello() {
 			fmt.Println("Hello Meta39")
 		}
+		5、golang/go.mod 引入 github.com/Meta39/overtime
+			module golang
+			go [版本号]
+			require github.com/Meta39/gohello v0.1.0
+			require github.com/Meta39/overtime v0.0.0
+			replace github.com/Meta39/overtime  => ../overtime
 	*/
+	overtime.Hello() //引用golang同级的overtime项目，并调用Hello()函数
 
 	/*
 		使用go module发布包
@@ -225,6 +238,7 @@ func Package() {
 
 			gohello.SayHi("张三") // v2版本的SayHi函数需要传入字符串参数
 	*/
+	fmt.Println("调用github.com/Meta39/gohello/v2 SayHi()方法")
 	gohello2.SayHi("张三")
 
 	/*
