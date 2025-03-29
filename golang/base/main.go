@@ -30,4 +30,6 @@ func main() {
 	Struct()
 	//13、包
 	Package()
+	//14、接口
+	Interface()
 }
