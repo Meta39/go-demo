@@ -34,4 +34,6 @@ func main() {
 	Interface()
 	//15、错误
 	Error()
+	//16、反射
+	Reflect()
 }
