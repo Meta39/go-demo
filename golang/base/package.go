@@ -226,5 +226,15 @@ func Package() {
 	*/
 	gohello2.SayHi("张三")
 
+	/*
+		废弃已发布版本
+		如果某个发布的版本存在致命缺陷不再想让用户使用时，我们可以使用retract声明废弃的版本。
+		例如我们在 github.com/Meta39/gohello/go.mod文件中按如下方式声明即可对外废弃v0.1.2版本：
+			module github.com/Meta39/gohello
+			go [版本号]
+			retract v0.1.2 //废弃已发布版本
+		用户使用go get下载v0.1.2版本时就会收到提示，催促其升级到其他版本。
+	*/
+
 	fmt.Println("============ 包 ============")
 }
