@@ -192,7 +192,8 @@ func errgroupHandleError() error {
 		"https://www.unkonw.com", //不存在的网页
 	}
 	for _, url := range urls {
-		url := url // 注意此处声明新的变量
+		//在 Go 1.22+ 中，for-range 循环的变量默认在每次迭代中创建新副本，不再需要手动 url := url，因此下面这行重新声明新变量可以省略。
+		//url := url // 注意此处声明新的变量，循环变量在 goroutine 闭包中被共享，导致数据竞争或逻辑错误。
 		// 启动一个goroutine去获取url内容
 		g.Go(func() error {
 			resp, err := http.Get(url)
