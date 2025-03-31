@@ -2,6 +2,8 @@ package concurrent
 
 import (
 	"fmt"
+	"golang.org/x/sync/errgroup"
+	"net/http"
 	"sync"
 	"time"
 )
@@ -98,6 +100,48 @@ func Goroutine() {
 		Go语言中可以通过runtime.GOMAXPROCS函数设置当前程序并发时占用的 CPU逻辑核心数。
 		（Go1.5版本之前，默认使用的是单核心执行。Go1.5 版本之后，默认使用全部的CPU 逻辑核心数。）
 	*/
+
+	/*
+		在启用 goroutine 去执行任务的场景下，如果想要 recover goroutine 中可能出现的 panic 就需要在 goroutine 中使用 recover。
+		如下所示：
+	*/
+	fmt.Println("goroutine 中处理 panic 就需要在 goroutine 中使用 recover")
+	goroutineHandlePanic()
+
+	/*
+		errgroup 它能为处理公共任务的子任务而开启的一组 goroutine 提供同步、error 传播和基于context 的取消功能。
+		注意：errgroup 属于 golang.org/x/sync/errgroup，而不是标准库。因此需要用以下命令进行导入：
+		go get golang.org/x/sync/errgroup
+
+		errgroup 包中定义了一个 Group 类型，它包含了若干个不可导出的字段。
+
+			type Group struct {
+				cancel func()
+
+				wg sync.WaitGroup
+
+				errOnce sync.Once
+				err     error
+			}
+
+		errgroup.Group 提供了Go和Wait两个方法。
+
+			func (g *Group) Go(f func() error)
+			func (g *Group) Wait() error
+			func WithContext(ctx context.Context) (*Group, context.Context)
+
+		Go 函数会在新的 goroutine 中调用传入的函数f；第一个返回非零错误的调用将取消该Group；下面的Wait方法会返回该错误。
+		Wait 会阻塞直至由上述 Go 方法调用的所有函数都返回，然后从它们返回第一个非nil的错误（如果有）。
+		WithContext 创建带有 cancel 方法的 errgroup.Group
+		下面的示例代码演示了如何使用 errgroup 包来处理多个子任务 goroutine 中可能返回的 error。
+	*/
+	fmt.Println("errgroup")
+	err := errgroupHandleError()
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
 }
 
 func goroutineSayHello() {
@@ -112,4 +156,60 @@ func goroutineSayHello2() {
 func goroutineSayHello3(i int) {
 	defer wg.Done() // goroutine结束就登记-1
 	fmt.Println("hello", i)
+}
+
+/*
+goroutine中处罚的panic，只能在goroutine中用defer 匿名函数中进行recover处理
+*/
+func goroutineHandlePanic() {
+	// 开启一个goroutine执行任务
+	go func() {
+		//goroutine中处罚的panic，只能在goroutine中用defer 匿名函数中进行recover处理
+		defer func() {
+			if r := recover(); r != nil {
+				fmt.Printf("recover inner panic:%v\n", r)
+			}
+		}()
+		fmt.Println("in goroutine....")
+		// 只能触发当前goroutine中的defer
+		panic("panic in goroutine")
+	}()
+
+	time.Sleep(time.Second)
+	fmt.Println("exit")
+}
+
+/*
+使用 errgroup 包来处理多个子任务 goroutine 中可能返回的 error。
+注意：errgroup 属于 golang.org/x/sync/errgroup，而不是标准库。因此需要用以下命令进行导入：
+go get golang.org/x/sync/errgroup
+*/
+func errgroupHandleError() error {
+	g := new(errgroup.Group) // 创建等待组（类似sync.WaitGroup）
+	var urls = []string{
+		"https://golang.google.cn",
+		"https://www.baidu.com",
+		"https://www.unkonw.com", //不存在的网页
+	}
+	for _, url := range urls {
+		url := url // 注意此处声明新的变量
+		// 启动一个goroutine去获取url内容
+		g.Go(func() error {
+			resp, err := http.Get(url)
+			if err == nil {
+				fmt.Printf("%s获取网页成功\n", url)
+				_ = resp.Body.Close() //这里的错误不是重点，因此略过
+			}
+			return err // 返回错误
+		})
+	}
+
+	//获取返回错误
+	if err := g.Wait(); err != nil {
+		// 处理可能出现的错误
+		fmt.Println("获取网页失败", err)
+		return err
+	}
+	fmt.Println("所有goroutine均成功")
+	return nil
 }
