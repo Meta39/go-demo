@@ -36,4 +36,6 @@ func main() {
 	Error()
 	//16、反射
 	Reflect()
+	//17、并发
+	Concurrent()
 }
