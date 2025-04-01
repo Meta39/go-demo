@@ -2,8 +2,8 @@
 先启动server端再启动client端，在client端输入任意内容回车之后就能够在server端看到client端发送的数据，从而实现TCP通信。
 
 ## 启动顺序
-1. server
-2. client
+1. server（在server文件夹下执行go build server编译后运行 server.exe 文件）
+2. client（在server文件夹下执行go client 编译后运行 client.exe 文件）
 
 ## 通讯
 1. 在client客户端命令行输入内容，按回车发送内容。
