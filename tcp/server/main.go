@@ -8,6 +8,8 @@ func main() {
 	go tcpServerStickyPackets("127.0.0.1:20001")        //TCP 服务端粘包（暴露粘包问题）
 	go resolveTcpServerStickyPackets("127.0.0.1:20002") //解决 TCP 服务端粘包（解决粘包问题）
 
+	go udpServer(0, 0, 0, 0, 20003) //UDP服务端
+
 	// 主程序阻塞（按Ctrl+C退出）
 	select {}
 }

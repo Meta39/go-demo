@@ -22,7 +22,7 @@ func resolveTcpServerStickyPackets(address string) {
 		fmt.Println("解决粘包服务端 listen failed, err:", err)
 		return
 	}
-	listen.Close()
+	defer listen.Close()
 	for {
 		conn, err := listen.Accept()
 		if err != nil {
