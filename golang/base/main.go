@@ -38,4 +38,6 @@ func main() {
 	Reflect()
 	//17、并发
 	Concurrent()
+	//18、泛型
+	Any()
 }
