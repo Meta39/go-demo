@@ -40,4 +40,6 @@ func main() {
 	Concurrent()
 	//18、泛型
 	Any()
+	//19、迭代器
+	Iter()
 }
