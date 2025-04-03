@@ -1,3 +1,19 @@
+# GOPROXY 要配置相同
+
+如果代理不一致可能会导致拉依赖go.sum校验和出问题。
+
+## Windows cmd
+```shell
+go env -w GO111MODULE=on
+go env -w GOPROXY=https://goproxy.cn,direct
+```
+
+## macOS or Linux
+```shell
+export GO111MODULE=on
+export GOPROXY=https://goproxy.cn
+```
+
 # go-demo
 go-demo
 
