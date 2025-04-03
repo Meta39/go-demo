@@ -18,6 +18,9 @@ export GOPROXY=https://goproxy.cn
 go-demo
 
 ## golang是基础包
+基础包下面./base/test包下面包含
+1. test测试用例
+2. Go语言常用标准库：fmt、time、flag、log、文件操作、strconv、net/http、context等
 
 ## overtime是给golang本地调用的测试包
 
