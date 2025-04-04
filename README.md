@@ -21,6 +21,15 @@ go-demo
 基础包下面./base/test包下面包含
 1. test测试用例
 2. Go语言常用标准库：fmt、time、flag、log、文件操作、strconv、net/http、context等
+### time格式化和解析问题
+相同国家推荐：
+时间：2025-10-01 10:00:00
+格式化为：now.Format("2006-01-02 15:04:05")//string
+解析：time.ParseInLocation("2006-01-02 15:04:05", "2025-10-01 10:00:00", time.Local)//Time
+不同国家推荐：
+时间：2025-10-01 10:00:00
+格式化为：now.Format("2006-01-02 15:04:05")//格式化时间前转为UTC时间，防止解析丢失时区string(UTC)
+解析：time.Parse("2006-01-02 15:04:05", "2025-10-01 10:00:00")//Time(UTC)
 
 ## overtime是给golang本地调用的测试包
 
