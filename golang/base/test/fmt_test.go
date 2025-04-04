@@ -46,6 +46,8 @@ func outPrint() {
 	*/
 	// 向标准输出写入内容
 	fmt.Fprintln(os.Stdout, "向标准输出写入内容")
+	wd, _ := os.Getwd()
+	fmt.Println("获取当前工作目录（调试用）:", wd)
 	//打开 Fprint.txt 文件，如果文件不存在，则创建并授予读写权限。
 	fileObj, err := os.OpenFile("../../Fprint.txt", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
 	defer fileObj.Close() //关闭文件流

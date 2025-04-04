@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"golang/base/customerror"
 	"golang/base/structs"
-	"log"
 	"os"
 	"strings"
 )
@@ -35,10 +34,7 @@ func Error() {
 		当我们使用fmt包打印错误时会自动调用 error 类型的 Error 方法，也就是会打印出错误的描述信息。
 	*/
 	//获取当前工作目录（调试用）
-	wd, err := os.Getwd()
-	if err != nil {
-		log.Fatal(err)
-	}
+	wd, _ := os.Getwd()
 	fmt.Println("获取当前工作目录（调试用）:", wd) // 检查路径是否匹配
 	file, err := os.Open("./base/func.go")
 	if err != nil {
