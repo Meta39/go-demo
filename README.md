@@ -28,9 +28,6 @@ go-demo
 四、log(简单日志服务)
 五、file(文件操作)
 六、strconv(基本数据类型和字符串处理)
-七、net/http(HTTP客户端和服务端)
-八、context(上下文)
-......
 ```
 ### time格式化和解析问题
 ```text
@@ -47,7 +44,7 @@ go-demo
 
 ## overtime是给golang本地调用的测试包
 
-## tcp是Go语言实现TCP通信
+## tcp
 如果没有tcp/client和tcp/server项目，则按以下方式创建。
 ### 创建tcp/client客户端
 1. 创建tcp目录
@@ -57,4 +54,24 @@ go-demo
 ### 创建tcp/server服务端
 1. 进入tcp目录
 2. 在tcp目录创建server
+3. server目录下执行go mod init server命令生成go.mod文件
+
+## http
+如果没有http/client和http/server项目，则按以下方式创建。
+
+注意：net/http不适用于企业级开发。企业级开发建议选择：Gin、Echo等第三方开源库。
+
+### 何时选择 net/http？
+1. 小型工具或对依赖极度敏感的项目。
+2. 需要完全控制底层实现（如自定义协议）。
+3. 学习HTTP原理的练手场景。
+
+### 创建http/client客户端
+1. 创建http目录
+2. 在http目录创建client
+3. client目录下执行go mod init client命令生成go.mod文件
+
+### 创建http/server服务端
+1. 进入http目录
+2. 在http目录创建server
 3. server目录下执行go mod init server命令生成go.mod文件
