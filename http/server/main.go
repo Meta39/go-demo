@@ -45,11 +45,13 @@ func main() {
 
 // 首页
 func index(w http.ResponseWriter, r *http.Request) {
+	defer r.Body.Close()
 	fmt.Fprintln(w, "首页")
 }
 
 // 无参GET请求
 func getRequestWithoutParameters(w http.ResponseWriter, r *http.Request) {
+	defer r.Body.Close()
 	fmt.Fprintln(w, "无参GET请求")
 }
 
@@ -92,6 +94,7 @@ func postRequestWithBody(w http.ResponseWriter, r *http.Request) {
 
 // GET请求随机出现慢响应
 func getRequestRandomSlowResponse(w http.ResponseWriter, r *http.Request) {
+	defer r.Body.Close()
 	number := rand.Intn(2)
 	if number == 0 {
 		time.Sleep(time.Second * 10) // 耗时10秒的慢响应
