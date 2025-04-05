@@ -20,7 +20,7 @@ go-demo
 ## golang是基础包
 基础包下面./base/test包下面包含
 1. test测试用例
-2. Go语言常用标准库：fmt、time、flag、log、文件操作、strconv、net/http、context等
+2. Go语言常用标准库：fmt、time、flag、log、file(文件操作)、strconv、net/http、context等
 ### time格式化和解析问题
 ```text
 相同国家推荐：
