@@ -3,7 +3,9 @@ package main
 import (
 	"fmt"
 	"io"
+	"math/rand"
 	"net/http"
+	"time"
 )
 
 /*
@@ -28,10 +30,11 @@ log.Fatal(s.ListenAndServe())
 func main() {
 	//将代码编译之后执行，打开你电脑上的浏览器地址栏输入127.0.0.1:8080回车，输出Hello Go Server.
 	http.HandleFunc("/", index)
-	http.HandleFunc("/getRequestWithoutParameters", getRequestWithoutParameters) //无参GET请求
-	http.HandleFunc("/getRequestWithParameters", getRequestWithParameters)       //有参GET请求
-	http.HandleFunc("/postRequestWithForm", postRequestWithForm)                 //携带表单数据的POST请求
-	http.HandleFunc("/postRequestWithBody", postRequestWithBody)                 //携带请求体的POST请求
+	http.HandleFunc("/getRequestWithoutParameters", getRequestWithoutParameters)   //无参GET请求
+	http.HandleFunc("/getRequestWithParameters", getRequestWithParameters)         //有参GET请求
+	http.HandleFunc("/postRequestWithForm", postRequestWithForm)                   //携带表单数据的POST请求
+	http.HandleFunc("/postRequestWithBody", postRequestWithBody)                   //携带请求体的POST请求
+	http.HandleFunc("/getRequestRandomSlowResponse", getRequestRandomSlowResponse) //GET请求随机出现慢响应
 
 	err := http.ListenAndServe(":8080", nil)
 	if err != nil {
@@ -85,4 +88,15 @@ func postRequestWithBody(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("携带请求体的POST请求的JSON数据", string(b))
 	answer := `{"status": "ok"}`
 	w.Write([]byte(answer))
+}
+
+// GET请求随机出现慢响应
+func getRequestRandomSlowResponse(w http.ResponseWriter, r *http.Request) {
+	number := rand.Intn(2)
+	if number == 0 {
+		time.Sleep(time.Second * 10) // 耗时10秒的慢响应
+		fmt.Fprintf(w, "slow response")
+		return
+	}
+	fmt.Fprint(w, "quick response")
 }
