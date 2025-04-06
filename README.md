@@ -83,3 +83,15 @@ go-demo
 4. Context的Value相关方法应该传递请求域的必要数据，不应该用于传递可选参数
 5. Context是线程安全的，可以放心的在多个goroutine中传递
 
+## database/mysql
+```text
+Go操作MySQL数据库
+1、简单的增查改删(CRUD)
+2、预编译SQL，防止SQL注入
+3、MySQL事务控制(ACID)
+事务必须满足4个条件：原子性（Atomicity，或称不可分割性）、一致性（Consistency）、隔离性（Isolation，又称独立性）、持久性（Durability）
+```
+注意：
+1. 企业级开发推荐使用第三方开源ORM库：GORM、sqlx等
+2. 企业级开发推荐使用第三方开源Web库：Gin、Echo等
+
