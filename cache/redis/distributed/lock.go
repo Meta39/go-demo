@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"github.com/redis/go-redis/v9"
 	"log"
-	"sync"
+	"redis/config"
 	"time"
 
 	"github.com/google/uuid"
@@ -20,17 +20,6 @@ const defaultTxExpiration = 300 * time.Second
 
 // 默认事务重试次数
 const defaultRetries = 3
-
-// redisClient 为全局单例
-var redisClient *redis.Client
-var once sync.Once
-
-// InitRedisClient 初始化全局 Redis 客户端，应用启动时只需调用一次
-func InitRedisClient(opts *redis.Options) {
-	once.Do(func() {
-		redisClient = redis.NewClient(opts)
-	})
-}
 
 // DistributedLock 封装了分布式锁实现
 type DistributedLock struct {
@@ -49,7 +38,7 @@ func NewDistributedLock(key string, expiration time.Duration) *DistributedLock {
 		expiration = defaultExpiration
 	}
 	return &DistributedLock{
-		client:     redisClient,
+		client:     config.RedisClient,
 		key:        key,
 		value:      uuid.NewString(),
 		expiration: expiration,
@@ -126,12 +115,12 @@ func (l *DistributedLock) Unlock() error {
 	return nil
 }
 
-// DoWithLockDefault 默认超时时间为30秒的分布式锁
+// DoWithLockDefault 默认超时时间为30秒的分布式锁【分布式锁】
 func DoWithLockDefault(lockKey string, businessLogic func() error) error {
 	return DoWithLock(lockKey, defaultExpiration, businessLogic)
 }
 
-// DoWithLock 包装业务逻辑执行，内部负责加锁、看门狗续约及释放锁
+// DoWithLock 包装业务逻辑执行，内部负责加锁、看门狗续约及释放锁【分布式锁】
 // 参数 expiration 为可选，传 0 则使用默认超时 30 秒
 func DoWithLock(lockKey string, expiration time.Duration, businessLogic func() error) error {
 	lock := NewDistributedLock(lockKey, expiration)
@@ -153,22 +142,22 @@ func DoWithLock(lockKey string, expiration time.Duration, businessLogic func() e
 	return businessLogic()
 }
 
-// DoWithLockTxDefaultTimeout 默认超时时间，重试次数自定义
+// DoWithLockTxDefaultTimeout 默认超时时间，重试次数自定义【用于多个redis命令原子操作】
 func DoWithLockTxDefaultTimeout(lockKey string, retries int, businessLogic func(pipe redis.Pipeliner) error) error {
 	return DoWithLockTx(lockKey, defaultTxExpiration, retries, businessLogic)
 }
 
-// DoWithLockTxDefaultRetries 默认重试次数，超时时间自定义
+// DoWithLockTxDefaultRetries 默认重试次数，超时时间自定义【用于多个redis命令原子操作】
 func DoWithLockTxDefaultRetries(lockKey string, expiration time.Duration, businessLogic func(pipe redis.Pipeliner) error) error {
 	return DoWithLockTx(lockKey, expiration, defaultRetries, businessLogic)
 }
 
-// DoWithLockTxDefaultTimeoutAndRetries 默认超时时间、重试次数。
+// DoWithLockTxDefaultTimeoutAndRetries 默认超时时间、重试次数。【用于多个redis命令原子操作】
 func DoWithLockTxDefaultTimeoutAndRetries(lockKey string, businessLogic func(pipe redis.Pipeliner) error) error {
 	return DoWithLockTx(lockKey, defaultTxExpiration, defaultRetries, businessLogic)
 }
 
-// DoWithLockTx 包装事务业务逻辑执行，加锁、事务控制及释放锁（无看门狗续约，因为WATCH机制不允许，因此需要合理的设置超时时间）
+// DoWithLockTx 包装事务业务逻辑执行，加锁、事务控制及释放锁（无看门狗续约，因为WATCH机制不允许，因此需要合理的设置超时时间）【用于多个redis命令原子操作】
 func DoWithLockTx(lockKey string, expiration time.Duration, retries int, businessLogic func(pipe redis.Pipeliner) error) error {
 	if retries <= 0 {
 		retries = defaultRetries

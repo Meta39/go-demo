@@ -45,7 +45,7 @@ func Lock() {
 		func (m *Mutex) Lock()		获取互斥锁
 		func (m *Mutex) Unlock()	释放互斥锁
 
-		在Java中，与Go语言的sync.Mutex最相似的锁是 java.util.concurrent.locks.ReentrantLock（非公平模式）
+		在Java中，与Go语言的sync.Mutex最相似的锁是 java.redisutil.concurrent.locks.ReentrantLock（非公平模式）
 		一、两者都是互斥锁（Mutual Exclusion），保证同一时间只有一个线程能访问临界区。
 		二、均支持显式的加锁（Lock）和解锁（Unlock）操作，需要手动控制锁的生命周期。
 
