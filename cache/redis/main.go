@@ -28,7 +28,14 @@ func main() {
 	doWithLockDefault()
 
 	//多个redis命令原子操作使用【Watch + 事务管道，使用 GET + SET + WATCH 来实现Key递增效果，类似命令 INCR】
-	increment("key", 3)
+	key := "key"
+	_ = increment(key, 3, func(pipe redis.Pipeliner) error {
+		pipe.Set(context.Background(), key, 1, 15*time.Second)
+		pipe.Get(context.Background(), key)
+		//后续还可以有多个命令，但是多个命令都要与当前key有关，因为简体的就是这个key
+		log.Println("increment key:", key)
+		return nil
+	})
 
 	// 原子操作示例（单条命令基本上都是原子操作）
 	redisSet()
@@ -63,7 +70,7 @@ func doWithLockDefault() {
 }
 
 // 使用 GET + SET + WATCH 来实现Key递增效果，类似命令 INCR
-func increment(key string, maxRetries int) error {
+func increment(key string, maxRetries int, fn func(pipe redis.Pipeliner) error) error {
 	// 事务函数
 	txf := func(tx *redis.Tx) error {
 		n, err := tx.Get(context.Background(), key).Int()
@@ -73,10 +80,8 @@ func increment(key string, maxRetries int) error {
 
 		n++
 
-		_, err = tx.TxPipelined(context.Background(), func(pipe redis.Pipeliner) error {
-			pipe.Set(context.Background(), key, n, 0)
-			return nil
-		})
+		//fn为业务逻辑
+		_, err = tx.TxPipelined(context.Background(), fn)
 		return err
 	}
 
