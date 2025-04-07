@@ -8,7 +8,7 @@ import (
 )
 
 /*
-Atomic 原子操作【跟java里面的java.redisutil.concurrent.atomic类似，但java提供了更丰富的功能】
+Atomic 原子操作【跟java里面的java.util.concurrent.atomic类似，但java提供了更丰富的功能】
 针对整数数据类型（int32、uint32、int64、uint64）我们还可以使用原子操作来保证并发安全，通常直接使用原子操作比使用锁操作效率更高。
 Go语言中原子操作由内置的标准库sync/atomic提供。
 atomic包
