@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/redis/go-redis/v9"
 	"log"
@@ -26,8 +27,8 @@ func main() {
 	// 调用 DoWithLockDefault 分布式锁，锁超时时间默认 30 秒，超时后看门狗自动续期【分布式锁】
 	doWithLockDefault()
 
-	// 调用 DoWithLockTxDefaultTimeoutAndRetries 包装事务业务逻辑，锁超时时间默认 300 秒，超时后不会自动续期，重试次数默认 3 次。【用于多个redis命令原子操作】
-	doWithLockTxDefaultTimeoutAndRetries()
+	//多个redis命令原子操作使用【Watch + 事务管道，使用 GET + SET + WATCH 来实现Key递增效果，类似命令 INCR】
+	increment("key", 3)
 
 	// 原子操作示例（单条命令基本上都是原子操作）
 	redisSet()
@@ -61,20 +62,39 @@ func doWithLockDefault() {
 	}
 }
 
-// 调用 DoWithLockTxDefaultTimeoutAndRetries 包装事务业务逻辑，锁超时时间默认 300 秒，超时后不会自动续期，重试次数默认 3 次。【用于多个redis命令原子操作】
-func doWithLockTxDefaultTimeoutAndRetries() {
-	if err := distributed.DoWithLockTxDefaultTimeoutAndRetries("doWithLockTx", func(pipe redis.Pipeliner) error {
-		log.Println("执行事务业务逻辑...")
-		// 模拟业务耗时
-		time.Sleep(3 * time.Second)
-		// 例如：在事务中设置一个键值
-		pipe.Set(context.Background(), "someKey", "someValue", 30*time.Second)
-		log.Println("事务业务逻辑执行完毕")
-		// 可以在这里继续添加其他 Redis 操作
-		return nil
-	}); err != nil {
-		log.Printf("事务业务执行失败: %v", err)
+// 使用 GET + SET + WATCH 来实现Key递增效果，类似命令 INCR
+func increment(key string, maxRetries int) error {
+	// 事务函数
+	txf := func(tx *redis.Tx) error {
+		n, err := tx.Get(context.Background(), key).Int()
+		if err != nil && err != redis.Nil {
+			return err
+		}
+
+		n++
+
+		_, err = tx.TxPipelined(context.Background(), func(pipe redis.Pipeliner) error {
+			pipe.Set(context.Background(), key, n, 0)
+			return nil
+		})
+		return err
 	}
+
+	//maxRetries重试次数
+	for i := 0; i < maxRetries; i++ {
+		err := config.RedisClient.Watch(context.Background(), txf, key)
+		if err == nil {
+			// Success.
+			return nil
+		}
+		if err == redis.TxFailedErr {
+			// 乐观锁失败
+			continue
+		}
+		return err
+	}
+
+	return errors.New("increment reached maximum number of retries")
 }
 
 // 原子操作示例（单条命令基本上都是原子操作）
