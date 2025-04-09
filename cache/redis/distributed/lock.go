@@ -15,11 +15,7 @@ import (
 // 默认超时时间
 const defaultExpiration = 30 * time.Second
 
-// 默认事务超时时间
-const defaultTxExpiration = 300 * time.Second
-
-// 默认事务重试次数
-const defaultRetries = 3
+var ErrLockNotAcquired = errors.New("failed to acquire lock") //获取锁失败（未抢到锁）
 
 // DistributedLock 封装了分布式锁实现
 type DistributedLock struct {
@@ -33,7 +29,10 @@ type DistributedLock struct {
 
 // NewDistributedLock 构造锁对象
 // 当传入的 expiration 为 0 时，使用默认 30 秒
-func NewDistributedLock(key string, expiration time.Duration) *DistributedLock {
+func NewDistributedLock(key string, expiration time.Duration) (*DistributedLock, error) {
+	if config.RedisClient == nil {
+		return nil, errors.New("redis client is nil")
+	}
 	if expiration <= 0 {
 		expiration = defaultExpiration
 	}
@@ -43,7 +42,7 @@ func NewDistributedLock(key string, expiration time.Duration) *DistributedLock {
 		value:      uuid.NewString(),
 		expiration: expiration,
 		ctx:        context.Background(),
-	}
+	}, nil
 }
 
 // Lock 尝试加锁成功则启动看门狗自动续期
@@ -123,17 +122,26 @@ func DoWithLockDefault(lockKey string, businessLogic func() error) error {
 // DoWithLock 包装业务逻辑执行，内部负责加锁、看门狗续约及释放锁【分布式锁】
 // 参数 expiration 为可选，传 0 则使用默认超时 30 秒
 func DoWithLock(lockKey string, expiration time.Duration, businessLogic func() error) error {
-	lock := NewDistributedLock(lockKey, expiration)
+	lock, err := NewDistributedLock(lockKey, expiration)
+	if err != nil {
+		return fmt.Errorf("create lock failed: %w", err)
+	}
 	locked, err := lock.Lock()
 	if err != nil {
-		return fmt.Errorf("lock error: %w", err)
+		return fmt.Errorf("lock error for key %s: %w", lockKey, err)
 	}
 	if !locked {
-		//没有获取到锁直接返回nil，或抛出错误。(推荐返回nil)
-		//return errors.New("unable to acquire lock")
-		return nil
+		return ErrLockNotAcquired
 	}
+
 	defer func() {
+		/*
+			直接调用 lock.Unlock() 是安全的，因为：
+				1.Unlock 内部通过原子性脚本验证锁的归属。
+				2.幂等性设计确保重复调用无害。
+				3.无需引入额外的竞态条件风险。
+			这种实现方式符合 Redis 分布式锁的最佳实践，兼顾了安全性和简洁性。
+		*/
 		if err := lock.Unlock(); err != nil {
 			log.Printf("unlock error: %v", err)
 		}

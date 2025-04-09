@@ -11,8 +11,13 @@ import (
 	"redis/distributed"
 	"redis/redisutil"
 	"strconv"
+	"sync"
 	"time"
 )
+
+const numWorkers = 1000
+
+var wg sync.WaitGroup
 
 /*
 redis操作
@@ -25,7 +30,11 @@ func main() {
 	})
 
 	// 调用 DoWithLockDefault 分布式锁，锁超时时间默认 30 秒，超时后看门狗自动续期【分布式锁】
-	doWithLockDefault()
+	for i := 0; i < numWorkers; i++ { //开启1000个协程，看看分布式锁是否成功。
+		wg.Add(1) // 增加计数器
+		go doWithLockDefault()
+	}
+	wg.Wait() // 等待所有worker完成
 
 	//多个redis命令原子操作使用【Watch + 事务管道，使用 GET + SET + WATCH 来实现Key递增效果，类似命令 INCR】
 	key := "key"
@@ -57,14 +66,22 @@ type user struct {
 
 // 调用 DoWithLockDefault 分布式锁，锁超时时间默认 30 秒，超时后看门狗自动续期
 func doWithLockDefault() {
-	if err := distributed.DoWithLockDefault("lockName", func() error {
+	defer wg.Done() // 完成后通知WaitGroup
+	err := distributed.DoWithLockDefault("lockName", func() error {
 		log.Println("执行业务逻辑...")
 		// 模拟业务耗时
 		time.Sleep(3 * time.Second)
 		log.Println("业务逻辑执行完毕")
 		return nil
-	}); err != nil {
+	})
+	switch {
+	case errors.Is(err, distributed.ErrLockNotAcquired):
+		log.Println("获取锁失败（未抢到锁）")
+		return
+	case err != nil:
 		log.Printf("业务执行失败：%v", err)
+		return
+	default:
 		return
 	}
 }
@@ -92,7 +109,7 @@ func increment(key string, maxRetries int, fn func(pipe redis.Pipeliner) error) 
 			// Success.
 			return nil
 		}
-		if err == redis.TxFailedErr {
+		if errors.Is(err, redis.TxFailedErr) {
 			// 乐观锁失败
 			continue
 		}
